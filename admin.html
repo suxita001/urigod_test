@@ -251,6 +251,9 @@ function buildCardHTML(id, d, isPending) {
       ? `<img src="${d.userCustomAvatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` 
       : (d.userAvatar || '👤');
 
+  // 🔥 აქ ვამატებთ იუზერის უნიკალურ (უცვლელ) ID-ს
+  const uidHtml = d.userId ? `<div style="font-size:11px; color:var(--cyan); margin-top:2px; font-family:monospace; letter-spacing:0.5px;">UID: ${d.userId}</div>` : '';
+
   return `
     <div class="rv-card">
       <div class="rv-top">
@@ -260,7 +263,7 @@ function buildCardHTML(id, d, isPending) {
           </div>
           <div>
             <div class="rv-name">${d.userName || 'მომხმარებელი'}</div>
-            <div class="rv-date">${dateStr}</div>
+            ${uidHtml} <div class="rv-date" style="margin-top:2px;">${dateStr}</div>
           </div>
         </div>
       </div>
