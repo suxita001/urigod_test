@@ -210,6 +210,20 @@ function switchSection(section) {
 function loadSectionData() {
   const container = document.getElementById('reviews-container');
   container.innerHTML = '<div class="empty-state">იტვირთება მონაცემები...</div>';
+
+  function loadSectionData(section) {
+  // 🔥 1. ვრთავთ ბაზის ინიციალიზაციას უეჭველად
+  if (typeof initDB === 'function') initDB(); 
+  
+  // 🔥 2. დამცავი ფილტრი: თუ ბაზა ჯერ კიდევ არ ჩაიტვირთა, 0.2 წამი ვაცდით და თავიდან ვიძახებთ
+  if (!db) {
+    setTimeout(() => loadSectionData(section), 200);
+    return;
+  }
+
+  // ... აქ უკვე ჩვეულებრივად გრძელდება შენი ძველი კოდი, სადაც db.collection() წერია ...
+  // მაგალითად: db.collection('reviews')...
+}
   
   if (currentSection === 'pending') {
     // 1. მოლოდინში მყოფების წამოღება
