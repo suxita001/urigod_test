@@ -53,74 +53,20 @@
   .empty-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
 
   /* ── ადმინ პანელის რესპონსივი (მობილურის ვერსია) ── */
-@media (max-width: 768px) {
-  body {
-    flex-direction: column;
-    overflow-y: auto; 
-    height: auto;
+  @media (max-width: 768px) {
+    body { flex-direction: column; overflow-y: auto; height: auto; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--bdr); padding: 16px; flex-direction: column; }
+    .sb-logo { margin-bottom: 16px; text-align: center; }
+    .sb-menu { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .sb-link { padding: 10px 14px; font-size: 13px; }
+    .sb-bottom { margin-top: 16px; padding-top: 16px; justify-content: center; }
+    .main-content { padding: 16px; overflow-y: visible; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 20px; }
+    .page-title { font-size: 22px; }
+    .reviews-grid { grid-template-columns: 1fr; gap: 16px; }
+    .rv-actions { flex-direction: column; }
+    .btn-rj, .btn-ap { width: 100%; padding: 12px; }
   }
-  
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--bdr);
-    padding: 16px;
-    flex-direction: column;
-  }
-  
-  .sb-logo { 
-    margin-bottom: 16px; 
-    text-align: center; 
-  }
-  
-  .sb-menu {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .sb-link { 
-    padding: 10px 14px; 
-    font-size: 13px; 
-  }
-  
-  .sb-bottom {
-    margin-top: 16px;
-    padding-top: 16px;
-    justify-content: center;
-  }
-
-  .main-content {
-    padding: 16px;
-    overflow-y: visible;
-  }
-  
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-  
-  .page-title { 
-    font-size: 22px; 
-  }
-  
-  .reviews-grid {
-    grid-template-columns: 1fr; /* 🔥 ბარათები 1 სვეტად მობილურისთვის */
-    gap: 16px;
-  }
-  
-  .rv-actions { 
-    flex-direction: column; 
-  }
-  
-  .btn-rj, .btn-ap { 
-    width: 100%; 
-    padding: 12px; 
-  }
-}
 </style>
 </head>
 <body>
@@ -141,7 +87,7 @@
   </div>
 
   <div class="sb-bottom">
-    <a href="/index.html" class="sb-link" style="padding:0; background:none; border:none;">
+    <a href="index.html" class="sb-link" style="padding:0; background:none; border:none;">
       <span>←</span> საიტზე დაბრუნება
     </a>
   </div>
@@ -161,31 +107,54 @@
     <div class="empty-state">იტვირთება მონაცემები...</div>
   </div>
 </main>
-<script src="/js/auth.js"></script>
-
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
+<script src="js/auth.js"></script>
+
 <script>
 let db = null;
-let currentSection = 'pending'; // 'pending' ან 'all'
-let allLoadedReviews = []; // ლოკალური ქეში სერჩისთვის
+let currentSection = 'pending'; 
+let allLoadedReviews = []; 
+
+function initDB() {
+  if (!db && typeof firebase !== 'undefined') {
+    // თუ რაღაც მიზეზით პირველ წამს არ ჩაირთო, აქედანაც ვაიძულებთ ინიციალიზაციას
+    if (!firebase.apps.length && typeof firebaseConfig !== 'undefined') {
+      firebase.initializeApp(firebaseConfig);
+    }
+    if (firebase.apps.length > 0) {
+      db = firebase.firestore();
+    }
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ვაძლევთ 1 წამს, რომ იუზერის სტატუსი და სკრიპტები სინქრონიზდეს
   setTimeout(() => {
+    initDB();
+    
     const u = JSON.parse(localStorage.getItem('ug_user') || 'null');
-    if (!u || !u.email || (typeof ADMIN_EMAILS !== 'undefined' && !ADMIN_EMAILS.includes(u.email.toLowerCase()))) {
-      alert("⚠️ წვდომა შეზღუდულია!");
-      window.location.href = '/index.html';
+    
+    // დაზღვევა იმ შემთხვევისთვის, თუ auth.js-დან ADMIN_EMAILS-მა ვერ მოაღწია
+    const allowedEmails = (typeof ADMIN_EMAILS !== 'undefined') 
+      ? ADMIN_EMAILS 
+      : ["nika@gmail.com", "saba@gmail.com", "urigodge8@gmail.com", "urigodge@gmail.com"];
+
+    if (!u || !u.email || !allowedEmails.map(e => e.toLowerCase()).includes(u.email.toLowerCase())) {
+      alert("⚠️ წვდომა შეზღუდულია! მხოლოდ ადმინისტრატორებისთვის.");
+      window.location.href = 'index.html'; // სლეში მოვაშორე
       return;
     }
     
-    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-      db = firebase.firestore();
+    if (db) {
       loadSectionData();
+    } else {
+      document.getElementById('reviews-container').innerHTML = 
+        `<div class="empty-state">❌ ბაზასთან დაკავშირება ვერ მოხერხდა. შეამოწმეთ ინტერნეტი ან კონსოლი.</div>`;
     }
   }, 1000);
 });
@@ -208,25 +177,16 @@ function switchSection(section) {
 }
 
 function loadSectionData() {
+  initDB();
   const container = document.getElementById('reviews-container');
   container.innerHTML = '<div class="empty-state">იტვირთება მონაცემები...</div>';
-
-  function loadSectionData(section) {
-  // 🔥 1. ვრთავთ ბაზის ინიციალიზაციას უეჭველად
-  if (typeof initDB === 'function') initDB(); 
   
-  // 🔥 2. დამცავი ფილტრი: თუ ბაზა ჯერ კიდევ არ ჩაიტვირთა, 0.2 წამი ვაცდით და თავიდან ვიძახებთ
   if (!db) {
-    setTimeout(() => loadSectionData(section), 200);
+    setTimeout(loadSectionData, 300);
     return;
   }
-
-  // ... აქ უკვე ჩვეულებრივად გრძელდება შენი ძველი კოდი, სადაც db.collection() წერია ...
-  // მაგალითად: db.collection('reviews')...
-}
   
   if (currentSection === 'pending') {
-    // 1. მოლოდინში მყოფების წამოღება
     db.collection("reviews").where("status", "==", "pending").orderBy("createdAt", "desc")
       .onSnapshot((snap) => {
         if (currentSection !== 'pending') return;
@@ -242,9 +202,11 @@ function loadSectionData() {
           html += buildCardHTML(doc.id, doc.data(), true);
         });
         container.innerHTML = html;
+      }, (err) => {
+        console.error("Firestore Error:", err);
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444;">ერორი მონაცემების წაკითხვისას (Missing Permissions). დარწმუნდით, რომ ადმინის მეილით ხართ დალოგინებული!</div>`;
       });
   } else {
-    // 2. ყველა დამტკიცებულის წამოღება
     db.collection("reviews").where("status", "==", "approved").orderBy("createdAt", "desc")
       .onSnapshot((snap) => {
         if (currentSection !== 'all') return;
@@ -263,6 +225,9 @@ function loadSectionData() {
           html += buildCardHTML(doc.id, data, false);
         });
         container.innerHTML = html;
+      }, (err) => {
+        console.error("Firestore Error:", err);
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444;">ერორი მონაცემების წაკითხვისას. შეამოწმეთ ადმინის სტატუსი.</div>`;
       });
   }
 }
@@ -279,10 +244,9 @@ function buildCardHTML(id, d, isPending) {
     <button class="btn-rj" onclick="handleReview('${id}', 'rejected')">✕ უარყოფა</button>
     <button class="btn-ap" onclick="handleReview('${id}', 'approved')">✓ დამტკიცება</button>
   ` : `
-    <button class="btn-rj" style="width:100%; flex:none;" onclick="handleReview('${id}', 'rejected', true)">🗑️ საიტიდან წაშლა (გადაფიქრება)</button>
+    <button class="btn-rj" style="width:100%; flex:none;" onclick="handleReview('${id}', 'rejected', true)">🗑️ საიტიდან წაშლა</button>
   `;
 
-  // 🔥 აქაც ვამოწმებთ ფოტოს
   const avatarHtml = d.userCustomAvatar 
       ? `<img src="${d.userCustomAvatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` 
       : (d.userAvatar || '👤');
@@ -308,15 +272,14 @@ function buildCardHTML(id, d, isPending) {
   `;
 }
 
-// ლოკალური ფილტრაცია (ძებნა) დამტკიცებული კომენტარებისთვის
 function filterReviewsLocal() {
   const query = document.getElementById('adminSearch').value.toLowerCase().trim();
   const container = document.getElementById('reviews-container');
   
   const filtered = allLoadedReviews.filter(item => {
-    return item.data.userName.toLowerCase().includes(query) || 
-           item.data.text.toLowerCase().includes(query) || 
-           item.data.restaurantId.toLowerCase().includes(query);
+    return (item.data.userName || '').toLowerCase().includes(query) || 
+           (item.data.text || '').toLowerCase().includes(query) || 
+           (item.data.restaurantId || '').toLowerCase().includes(query);
   });
 
   document.getElementById('badge-count').textContent = filtered.length;
@@ -342,7 +305,7 @@ function handleReview(docId, newStatus, isDeleteAction = false) {
     db.collection("reviews").doc(docId).update({
       status: newStatus
     }).then(() => {
-      if(isDeleteAction) filterReviewsLocal(); // თუ წავშალეთ, ძებნა განახლდეს
+      if(isDeleteAction) filterReviewsLocal(); 
     }).catch((error) => {
       console.error(error);
       alert("❌ ოპერაცია ვერ შესრულდა.");
