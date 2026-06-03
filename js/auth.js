@@ -276,7 +276,7 @@ function _toggleProfilePopup() {
   // თუ ადმინია, ვუმატებთ სპეციალურ ღილაკს
   const adminBtnHTML = isAdmin ? `
     <div class="pp-divider"></div>
-    <button class="pp-item" onclick="window.location.href='../../index.html'" style="color: var(--cyan);">
+    <button class="pp-item" onclick="window.location.href='admin.html'" style="color: var(--cyan);">
       <span>⚙️</span><span>ადმინ პანელი</span>
     </button>
   ` : '';
